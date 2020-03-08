@@ -1,4 +1,4 @@
-const { document } = require("./dom")
+const { document } = require("./view")
 
 // var obj = { name: "John" }
 // var vm = {} // 当然，你也可以在原对象上进行修改。
@@ -21,7 +21,6 @@ function defineReactive(obj, key, val) {
     Object.defineProperty(obj, key, {
         get: function () {
             // 这里应该保存所有使用这个属性的人。
-
             if (GLOBAL_CURRENT_SUB) dep.addSub(GLOBAL_CURRENT_SUB)
             return val
         },
@@ -60,31 +59,42 @@ function update() {
     this.value = this.vm[this.key]
     if (this.node) {
         this.node.nodeValue = this.value;
-        console.log("node know my new name: " + this.value)
+        console.log("node got notified: " + this.value)
     } else {
-        console.log("i know my new name: " + this.value)
+        console.log("node got notified: " + this.value)
     }
 }
 
-function compile(vm, el) {
-    node = document.getElementById(el)
-    console.log(node.nodeValue);
-    vModel = node.getAttribute('v-model')
-    if (vModel && vm.data[vModel]) {
-        new Subscriber(vm.data, node, vModel)
-        node.addEventListener('input', function (e) {
-            vm.data[vModel] = e.target.value
-        }, false);
-    }
+function compile(vm, node) {
+    if (!node.attributes) return
+    Array.prototype.slice.call(node.attributes).forEach((attr) => {
+        let name = attr.name
+        let value = attr.value
+        if (name == 'v-model') {
+            if (value && vm.data[value]) {
+                new Subscriber(vm.data, node, value)
+                node.addEventListener('input', function (e) {
+                    vm.data[value] = e.target.value
+                }, false);
+            }
+        }
+    })
+    compileChildren(vm, node)
+}
 
-    // new Subscriber
-
+function compileChildren(vm, node) {
+    let children = node.childNodes
+    if (!children) return
+    node.childNodes.forEach(function (child) {
+        compile(vm, child)
+    })
 }
 
 function VM(el, obj) {
     this.el = el
     this.data = observe(obj, {})
-    compile(this, el)
+    let node = document.getElementById(el)
+    compile(this, node)
 }
 
 module.exports = {

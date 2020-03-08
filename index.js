@@ -1,22 +1,31 @@
 const { VM } = require('./vm')
-const { document } = require("./dom")
+const { document } = require("./view")
 
 
 
 vm = new VM("app", {
-    name: "John"
+    name: "John",
+    from: "Shenzhen"
 })
 
 // model -> view
 
 vm.data.name = "Tom"
 vm.data.name = "Joey"
+vm.data.from = "Shanghai"
 
 // view -> model
 
-node = document.getElementById("app")
+node = document.getElementById("name")
 node.value = 'Chandler'
+dispatch(node)
 
-var event = document.createEvent('Event');
-event.initEvent('input', true, true);
-node.dispatchEvent(event);
+node = document.getElementById("from")
+node.value = 'Beijing'
+dispatch(node)
+
+function dispatch(node) {
+    var event = document.createEvent('Event');
+    event.initEvent('input', true, true);
+    node.dispatchEvent(event);
+}
